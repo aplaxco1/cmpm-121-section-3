@@ -22,6 +22,7 @@ export default class Play extends Phaser.Scene {
   rightBound?: number;
 
   enemies?: Phaser.GameObjects.Shape[] = [];
+  enemiesSpeed?: number[] = [];
   numEnemies: number = 3;
 
   constructor() {
@@ -63,11 +64,14 @@ export default class Play extends Phaser.Scene {
 
     let enemyHeight = 50;
     let enemyX = this.gameWidth / 2;
+    let enemySpeed = 4;
     for (let e = 0; e < this.numEnemies; e++) {
       const enemy = this.add.rectangle(enemyX, enemyHeight, 50, 25, 0xb3350e);
       this.enemies!.push(enemy);
+      this.enemiesSpeed!.push(enemySpeed);
       enemyHeight += 50;
       enemyX += 50;
+      enemySpeed -= 1;
     }
   }
 
@@ -75,10 +79,14 @@ export default class Play extends Phaser.Scene {
     this.starfield!.tilePositionX -= 4;
 
     // move enemies
-    for (const enemy of this.enemies!) {
-      enemy.x -= this.movementSpeed;
-      if (enemy.x < -50) {
-        enemy.x = this.gameWidth! + 100;
+    for (let e = 0; e < this.numEnemies; e++) {
+      this.enemies![e].x -= this.enemiesSpeed![e];
+      if (this.enemies![e].x < -50) {
+        this.enemies![e].x = this.gameWidth! + 100;
+      }
+
+      if (this.checkCollision(this.enemies![e], this.player!)) {
+        this.resetPlayerPosition();
       }
     }
 
@@ -100,9 +108,25 @@ export default class Play extends Phaser.Scene {
     if (this.isFiring == true) {
       this.player!.y -= this.fireSpeed;
       if (this.player!.y < -this.playerSize) {
-        this.player!.y = this.gameHeight! - this.playerSize + 5;
-        this.isFiring = false;
+        this.resetPlayerPosition();
       }
     }
+  }
+
+  resetPlayerPosition() {
+    this.isFiring = false;
+    this.player!.y = this.gameHeight! - this.playerSize + 5;
+  }
+
+  checkCollision(
+    player: Phaser.GameObjects.Shape,
+    enemy: Phaser.GameObjects.Shape,
+  ) {
+    const playerBounds = player.getBounds();
+    const enemyBounds = enemy.getBounds();
+    return Phaser.Geom.Intersects.RectangleToRectangle(
+      playerBounds,
+      enemyBounds,
+    );
   }
 }
