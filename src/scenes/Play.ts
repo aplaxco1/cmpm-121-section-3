@@ -21,7 +21,7 @@ export default class Play extends Phaser.Scene {
   leftBound?: number;
   rightBound?: number;
 
-  enemies?: Phaser.GameObjects.Shape[];
+  enemies?: Phaser.GameObjects.Shape[] = [];
   numEnemies: number = 3;
 
   constructor() {
@@ -61,23 +61,28 @@ export default class Play extends Phaser.Scene {
       0x3ab883,
     );
 
-    let enemyHeight = 30;
+    let enemyHeight = 50;
+    let enemyX = this.gameWidth / 2;
     for (let e = 0; e < this.numEnemies; e++) {
-      const enemy = this.add.rectangle(
-        this.gameWidth / 2,
-        enemyHeight,
-        50,
-        25,
-        0xb3350e,
-      );
-      this.enemies?.push(enemy);
-      enemyHeight += 30;
+      const enemy = this.add.rectangle(enemyX, enemyHeight, 50, 25, 0xb3350e);
+      this.enemies!.push(enemy);
+      enemyHeight += 50;
+      enemyX += 50;
     }
   }
 
   update() {
     this.starfield!.tilePositionX -= 4;
 
+    // move enemies
+    for (const enemy of this.enemies!) {
+      enemy.x -= this.movementSpeed;
+      if (enemy.x < -50) {
+        enemy.x = this.gameWidth! + 100;
+      }
+    }
+
+    // left and right player movement
     if (this.isFiring == false) {
       if (this.left!.isDown && this.player!.x > this.leftBound!) {
         this.player!.x -= this.movementSpeed;
@@ -87,6 +92,7 @@ export default class Play extends Phaser.Scene {
       }
     }
 
+    // firing logic
     if (this.fire!.isDown) {
       this.isFiring = true;
     }
